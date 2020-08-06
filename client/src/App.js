@@ -22,11 +22,17 @@ const UserVideoComponent = styled.video`
   border: 1px solid grey;
   width: 100%;
   height: 250px;
+  transform: rotateY(180deg);
+  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+  -moz-transform:rotateY(180deg); /* Firefox */
 `;
 const PartenrVideoComponent = styled.video`
   border: 1px solid blue;
   width: 100%;
   height: 250px;
+  transform: rotateY(180deg);
+  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+  -moz-transform:rotateY(180deg); /* Firefox */
 `;
 
 function App() {
@@ -47,8 +53,8 @@ function App() {
 
   useEffect(() => {
     // 1. connect to server
-    // socket.current = io.connect("http://192.168.29.67:8000/");
-    socket.current = io.connect("http://192.168.1.105:8000/");
+    socket.current = io.connect("http://192.168.29.67:8000/");
+    // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://c631dbd39801.ngrok.io/");
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
       setStream(stream);
