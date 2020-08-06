@@ -55,7 +55,7 @@ function App() {
     // 1. connect to server
     socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
-    // socket.current = io.connect("https://c631dbd39801.ngrok.io/");
+    // socket.current = io.connect("");
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
       setStream(stream);
 
@@ -82,7 +82,7 @@ function App() {
     })
 
 
-    socket.current.on("changeNameStatus", (response) => {      
+    socket.current.on("changeNameStatus", (response) => {
       if (response.status) {
         toast.success("Name changed!");
       } else {
@@ -135,6 +135,10 @@ function App() {
 
     socket.current.on("callEnded", () => {
       peer1.destroy("Call ended");
+    })
+
+    socket.current.on("error", (error) => {
+      peer1.destroy(error.message);
     })
 
   }
@@ -194,14 +198,14 @@ function App() {
         if (name === users[key]) {
           alreadyTaken = true;
         }
-      }        
+      }
     })
-    if (alreadyTaken){
+    if (alreadyTaken) {
       toast.error("name already taken!"); return;
     } else {
-      socket.current.emit("changeName", {name})
+      socket.current.emit("changeName", { name })
     }
-    
+
   }
 
   const changeNameInput = (
@@ -225,14 +229,16 @@ function App() {
     UserVideo = (
       <UserVideoComponent playsInline muted ref={userVideo} autoPlay />
     );
-    CallUserList = Object.keys(users).map(key => {
-      if (key === yourID) {
-        return null;
-      }
-      return (
-        <Button variant="primary" onClick={() => callPeer(key)} disabled={callButtonDisability}>Call {users[key]}</Button>
-      );
-    })
+    if (users[yourID] === "professor") {
+      CallUserList = Object.keys(users).map(key => {
+        if (key === yourID) {
+          return null;
+        }
+        return (
+          <Button variant="primary" onClick={() => callPeer(key)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[key]}</Button>
+        );
+      })
+    }
   }
 
   let PartnerVideo;
@@ -257,7 +263,18 @@ function App() {
         <button onClick={acceptCall}>Accept</button>
       </div>
     )
-    CallUserList = null;
+    // CallUserList = null;
+  }
+
+  let professorOnline;
+  if (users[yourID] !== "professor") {
+    Object.keys(users).map(key => {
+      if (key !== yourID) {
+        if (users[key] === "professor") {
+          professorOnline = "Professor online";
+        }
+      }
+    })
   }
 
   return (
@@ -276,6 +293,9 @@ function App() {
           <h1>You: {users[yourID]}</h1>
           {changeNameInput}
         </Col>
+      </Row>
+      <Row>
+        <h3 style={{color: "green"}}>{professorOnline}</h3>
       </Row>
       <ToastContainer autoClose={2000} />
     </Container>

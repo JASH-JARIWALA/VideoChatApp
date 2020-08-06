@@ -10,7 +10,7 @@ let count = 0;
 
 io.on('connection', socket => {
 
-    if (!users[socket.id]) {
+    if (!users[socket.id]) {        
         users[socket.id] = (++count).toString();
         console.log(users[socket.id]);
         socket.emit("yourID", socket.id);
@@ -23,8 +23,12 @@ io.on('connection', socket => {
         })
 
         socket.on("callUser", (data) => {
-            console.log(`${users[data.from]} called ${users[data.userToCall]}`);
-            io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
+            if (users[socket.id] === "professor") {                
+                console.log(`${users[data.from]} called ${users[data.userToCall]}`);
+                io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
+            } else {
+                socket.emit("error", {message: "Student can't call"})
+            }
         })
 
         socket.on("acceptCall", (data) => {
@@ -59,5 +63,4 @@ io.on('connection', socket => {
 });
 
 server.listen(8000, () => console.log('server is running on port 8000'));
-
 
