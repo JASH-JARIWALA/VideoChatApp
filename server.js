@@ -37,7 +37,7 @@ io.on('connection', socket => {
 
         socket.on("endCall", (data) => {
             io.to(data.id).emit("callEnded");
-            socket.emit("callEnded");
+            socket.emit("callEnded");            
         })
 
 
@@ -58,6 +58,18 @@ io.on('connection', socket => {
                 socket.emit("changeNameStatus", {status:true});
             }
         })
+
+        socket.on("videostream", (videoStream) => {
+            console.log(videoStream)
+            socket.emit("videoStatusChange", videoStream)
+        })
+        
+        socket.on("audiostream", (audioStream) => {
+            console.log(audioStream)
+            socket.emit("audioStatusChange", audioStream)
+        })
+
+
     }
 
 });
