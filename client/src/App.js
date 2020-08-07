@@ -56,7 +56,7 @@ function App() {
     // 1. connect to server
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
-    socket.current = io.connect("https://ielts-video-chat.herokuapp.com:8000");
+    socket.current = io.connect("https://ielts-video-chat.herokuapp.com");
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
       // console.log(stream.getVideoTracks()[0])      
       setStream(stream);
