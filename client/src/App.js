@@ -3,15 +3,16 @@ import './App.css';
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
-import { Button, Col, Form } from 'react-bootstrap';
+import { Button, Col, Form, Container } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
+import { CameraVideo, CameraVideoOff, MicMute, Mic } from 'react-bootstrap-icons';
 
-const Container = styled.div`
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-`;
+// const Container = styled.div`
+//   height: 100vh;
+//   width: 100%;
+//   display: flex;
+//   flex-direction: column;
+// `;
 
 
 const Row = styled.div`
@@ -21,8 +22,8 @@ const Row = styled.div`
 
 const UserVideoComponent = styled.video`
   border: 1px solid grey;
-  width: 100%;
-  height: 250px;
+  width: 50%;
+  height: 50%;
   transform: rotateY(180deg);
   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
   -moz-transform:rotateY(180deg); /* Firefox */
@@ -30,13 +31,14 @@ const UserVideoComponent = styled.video`
 const PartenrVideoComponent = styled.video`
   border: 1px solid blue;
   width: 100%;
-  height: 250px;
+  height: 70%;
   transform: rotateY(180deg);
   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
   -moz-transform:rotateY(180deg); /* Firefox */
 `;
 
 function App() {
+  const peer = useRef(null)
   const [yourID, setYourID] = useState("");
   const [users, setUsers] = useState({});
   const [stream, setStream] = useState();
@@ -52,13 +54,15 @@ function App() {
   const partnerVideo = useRef();
   const socket = useRef();
 
+  const [videoStatus, setVideoStatus] = useState(true);
+  const [audioStatus, setAudioStatus] = useState(true);
+
   useEffect(() => {
     // 1. connect to server
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
-    socket.current = io.connect("https://ielts-video-chat.herokuapp.com");
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      // console.log(stream.getVideoTracks()[0])      
+    socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => { 
       setStream(stream);
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
@@ -85,7 +89,7 @@ function App() {
       setCallerSignal(data.signal);
     })
 
-    
+
     socket.current.on("changeNameStatus", (response) => {
       if (response.status) {
         // toast.success("Name changed!");
@@ -99,18 +103,18 @@ function App() {
 
     // setCallButtonDisability(true);
 
-    const peer1 = new Peer({
+    peer.current = new Peer({
       initiator: true,
       trickle: false,
       stream: stream,
     });
 
     console.log("Call user")
-    peer1.on("signal", data => {
+    peer.current.on("signal", data => {
       socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID });
     });
 
-    peer1.on("stream", stream => {
+    peer.current.on("stream", stream => {
       if (partnerVideo.current) {
         partnerVideo.current.srcObject = stream;
       }
@@ -119,13 +123,13 @@ function App() {
     socket.current.on("callAccepted", signal => {
       setCallAccepted(true);
       setRemoteUserId(id);
-      peer1.signal(signal);
+      peer.current.signal(signal);
       setCallButtonDisability(true);
       console.log("accepted");
     });
-    
 
-    peer1.on("error", (error) => {
+
+    peer.current.on("error", (error) => {
       console.log(error);
       if (error !== "Call ended") {
         alert("Connection error or client closed webpage!")
@@ -141,74 +145,15 @@ function App() {
 
 
     socket.current.on("callEnded", () => {
-      peer1.destroy("Call ended");
+      peer.current.destroy("Call ended");
     })
 
     socket.current.on("error", (error) => {
-      peer1.destroy(error.message);
-    })
-    
-    socket.current.on("videoStatusChange", (video) => {
-      const oldTrack = stream.getVideoTracks()[0];
-      if (!video.status) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
-          const newTrack = newStream.getVideoTracks()[0]
-          stream.removeTrack(oldTrack)
-          stream.addTrack(newTrack)
-          peer1.replaceTrack(oldTrack, newTrack, stream);
-        })
-      }
-      else {
-        oldTrack.stop();
-        peer1.replaceTrack(oldTrack, stream.getVideoTracks()[0], stream);
-      }
+      peer.current.destroy(error.message);
     })
 
-    socket.current.on("audioStatusChange", (audio) => {
-      const oldTrack = stream.getAudioTracks()[0];
-      if (!audio.status) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
-          const newTrack = newStream.getAudioTracks()[0]
-          stream.removeTrack(oldTrack)
-          stream.addTrack(newTrack)
-          peer1.replaceTrack(oldTrack, newTrack, stream);
-        })
-      }
-      else {
-        oldTrack.stop();
-        peer1.replaceTrack(oldTrack, stream.getAudioTracks()[0], stream);
-      }
-    })
 
   }
-
-
-
-
-
-  function toggleVideo() {
-
-    const track = stream.getVideoTracks()[0]
-    if (track.readyState === "ended") {
-      socket.current.emit("videostream", { status: false })
-    } else if(track.readyState === "live") {
-      socket.current.emit("videostream", { status: true })
-    }
-  
-  }
-  
-  function toggleAudio() {
-
-    const track = stream.getAudioTracks()[0]
-    if (track.readyState === "ended") {
-      socket.current.emit("audiostream", { status: false })
-    } else if(track.readyState === "live") {
-      socket.current.emit("audiostream", { status: true })
-    }
-  
-  }
-
-
 
 
 
@@ -218,24 +163,24 @@ function App() {
     setCallButtonDisability(true);
     // setCaller(false);
 
-    const peer = new Peer({
+    peer.current = new Peer({
       initiator: false,
       trickle: false,
       stream: stream,
     });
 
-    peer.on("signal", data => {
+    peer.current.on("signal", data => {
       socket.current.emit("acceptCall", { signal: data, to: remoteUserId });
     });
 
-    peer.on("stream", stream => {
+    peer.current.on("stream", stream => {
       partnerVideo.current.srcObject = stream;
     });
 
-    peer.signal(callerSignal);
+    peer.current.signal(callerSignal);
 
 
-    peer.on("error", (error) => {
+    peer.current.on("error", (error) => {
       console.log(error);
       if (error !== "Call ended") {
         alert("Connection error or client closed webpage!")
@@ -252,46 +197,70 @@ function App() {
 
 
     socket.current.on("callEnded", () => {
-      peer.destroy("Call ended");
-    })
-
-
-    socket.current.on("videoStatusChange", (video) => {
-      const oldTrack = stream.getVideoTracks()[0];
-      if (!video.status) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
-          const newTrack = newStream.getVideoTracks()[0]
-          stream.removeTrack(oldTrack)
-          stream.addTrack(newTrack)
-          peer.replaceTrack(oldTrack, newTrack, stream);
-        })
-      }
-      else {
-        const track = stream.getVideoTracks()[0];
-        track.stop();
-        peer.replaceTrack(track, track, stream);
-      }
-    })
-
-
-    socket.current.on("audioStatusChange", (audio) => {
-      const oldTrack = stream.getAudioTracks()[0];
-      if (!audio.status) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
-          const newTrack = newStream.getAudioTracks()[0]
-          stream.removeTrack(oldTrack)
-          stream.addTrack(newTrack)
-          peer.replaceTrack(oldTrack, newTrack, stream);
-        })
-      }
-      else {
-        oldTrack.stop();
-        peer.replaceTrack(oldTrack, stream.getAudioTracks()[0], stream);
-      }
+      peer.current.destroy("Call ended");
     })
 
 
   }
+
+  function toggleVideo() {
+
+    const oldTrack = stream.getVideoTracks()[0];
+
+    if (oldTrack.readyState === "ended") {
+
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
+        const newTrack = newStream.getVideoTracks()[0]
+        stream.removeTrack(oldTrack)
+        stream.addTrack(newTrack)
+        setVideoStatus(true);
+        if (callAccepted) {
+          peer.current.replaceTrack(oldTrack, newTrack, stream);
+        }
+      })
+    }
+    else if (oldTrack.readyState === "live") {
+
+      oldTrack.stop();
+      setVideoStatus(false);
+
+      if (callAccepted) {
+        peer.current.replaceTrack(oldTrack, oldTrack, stream);
+      }
+    }
+
+  }
+
+  function toggleAudio() {
+
+    
+    const oldTrack = stream.getAudioTracks()[0];
+
+    if (oldTrack.readyState === "ended") {
+
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
+        const newTrack = newStream.getAudioTracks()[0]
+        stream.removeTrack(oldTrack)
+        stream.addTrack(newTrack)
+        setAudioStatus(true);
+        if (callAccepted) {
+          peer.current.replaceTrack(oldTrack, newTrack, stream);
+        }
+      })
+    }
+    else if (oldTrack.readyState === "live") {
+      
+      oldTrack.stop();
+      setAudioStatus(false);
+
+      if (callAccepted) {
+        peer.current.replaceTrack(oldTrack, oldTrack, stream);
+      }
+    }
+
+  }
+
+
 
   function endCall(key) {
     socket.current.emit("endCall", { id: remoteUserId })
@@ -335,7 +304,7 @@ function App() {
   let CallUserList;
   if (stream) {
     UserVideo = (
-      <UserVideoComponent playsInline muted ref={userVideo} autoPlay />
+      <video className="userVideo" playsInline muted ref={userVideo} autoPlay />
     );
     if (users[yourID] === "professor") {
       CallUserList = Object.keys(users).map(key => {
@@ -351,28 +320,38 @@ function App() {
 
   let PartnerVideo;
   let endCallButton;
+  let partnerName;
   if (callAccepted) {
-    PartnerVideo = (
-      <Col>
-        <PartenrVideoComponent playsInline ref={partnerVideo} autoPlay />
-        <h1>Partner: {users[remoteUserId]}</h1>
-      </Col>
-    );
+    PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
+    partnerName = <h4>Partner: {users[remoteUserId]}</h4>
     endCallButton = (
       <Button variant="danger" onClick={() => endCall()} >End Call</Button>
-      );
-    }
+    );
 
-    let incomingCall;
-    if (receivingCall && users[remoteUserId]) {
-      incomingCall = (
-        <div>
+  }
+  let ToggleMediaButtons;
+  const videobutton = videoStatus ? "outline-danger" : "danger";
+  const audiobutton = audioStatus ? "outline-danger" : "danger";
+  const videoIcon = videoStatus ? <CameraVideo /> : <CameraVideoOff />;
+  const audioIcon = audioStatus ? <Mic /> : <MicMute />;
+  ToggleMediaButtons = (
+    <>
+      <Button variant={videobutton} onClick={toggleVideo} > {videoIcon} </Button>
+      <Button variant={audiobutton} onClick={toggleAudio}> {audioIcon} </Button>
+    </>
+  )
+
+
+  let incomingCall;
+  if (receivingCall && users[remoteUserId]) {
+    incomingCall = (
+      <div>
         <h4>{caller} is calling you</h4>
         <button onClick={acceptCall}>Accept</button>
       </div>
     )
   }
-  
+
   let professorOnline;
   if (users[yourID] !== "professor") {
     Object.keys(users).map(key => {
@@ -383,19 +362,10 @@ function App() {
       }
     })
   }
-  
-  let ToggleMediaButtons;
-  if (callAccepted) {
-    ToggleMediaButtons = (
-    <>    
-      <Button variant="danger" onClick={toggleVideo}>Toggle Video</Button>
-      <Button variant="danger" onClick={toggleAudio}>Toggle Audio</Button>
-    </>
-    )
-  }
+
 
   return (
-    <Container style={{ backgroundColor: "black", color: "grey" }}>
+    <Container style={{ color: "white" }} fluid>
       <Row>
         {CallUserList}
       </Row>
@@ -403,18 +373,26 @@ function App() {
         {incomingCall}
         {endCallButton}
       </Row>
+
       <Row>
-        {PartnerVideo}
+
         <Col>
           {UserVideo}
-          {ToggleMediaButtons}
-          <h1>You: {users[yourID]}</h1>
+          <Row>{ToggleMediaButtons}</Row>
+          <h4>You: {users[yourID]}</h4>
           {changeNameInput}
         </Col>
+        <Col>
+          {PartnerVideo}
+          {partnerName}
+        </Col>
+
       </Row>
+
       <Row>
-        <h3 style={{ color: "green" }}>{professorOnline}</h3>
+        <h5 style={{ color: "green", fontWeight: "bold", margin: 5 }}>{professorOnline}</h5>
       </Row>
+
       <ToastContainer autoClose={2000} />
     </Container>
   );
