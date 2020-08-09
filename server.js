@@ -10,6 +10,8 @@ const io = socket(server);
 const users = {};
 let count = 0;
 
+app.use(express.static('client/build'))
+
 io.on('connection', socket => {
 
     if (!users[socket.id]) {        

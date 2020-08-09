@@ -3,39 +3,59 @@ import './App.css';
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
-import { Button, Col, Form, Container } from 'react-bootstrap';
+import { Button, Col, Form, Container, Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import { CameraVideo, CameraVideoOff, MicMute, Mic } from 'react-bootstrap-icons';
 
-// const Container = styled.div`
-//   height: 100vh;
-//   width: 100%;
-//   display: flex;
-//   flex-direction: column;
-// `;
+function ReceivingCallModal(props) {
+  return (
+    <Modal
+      {...props}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+      backdrop="static"
+      keyboard={false}
+    >
+      <Modal.Header closeButton style={{background: "grey"}}>
+        <Modal.Title id="contained-modal-title-vcenter">
+          Receiving Call
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body style={{background: "grey"}}>
+        <div style={{background: "grey"}}>
+          <h4>{props.caller} is calling you.</h4>
+        </div>
 
-
+      </Modal.Body>
+      <Modal.Footer style={{background: "grey"}}>
+        <Button variant="danger" onClick={props.onHide}>Reject</Button>
+        <Button variant="success" onClick={props.acceptCall}>Accept</Button>
+      </Modal.Footer>
+    </Modal>
+  )
+}
 const Row = styled.div`
   display: flex;
   width: 100%;
 `;
 
-const UserVideoComponent = styled.video`
-  border: 1px solid grey;
-  width: 50%;
-  height: 50%;
-  transform: rotateY(180deg);
-  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-  -moz-transform:rotateY(180deg); /* Firefox */
-`;
-const PartenrVideoComponent = styled.video`
-  border: 1px solid blue;
-  width: 100%;
-  height: 70%;
-  transform: rotateY(180deg);
-  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-  -moz-transform:rotateY(180deg); /* Firefox */
-`;
+// const UserVideoComponent = styled.video`
+//   border: 1px solid grey;
+//   width: 50%;
+//   height: 50%;
+//   transform: rotateY(180deg);
+//   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+//   -moz-transform:rotateY(180deg); /* Firefox */
+// `;
+// const PartenrVideoComponent = styled.video`
+//   border: 1px solid blue;
+//   width: 100%;
+//   height: 70%;
+//   transform: rotateY(180deg);
+//   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+//   -moz-transform:rotateY(180deg); /* Firefox */
+// `;
 
 function App() {
   const peer = useRef(null)
@@ -61,8 +81,9 @@ function App() {
     // 1. connect to server
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
-    socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => { 
+    // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
+    socket.current = io.connect("");
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
@@ -209,7 +230,7 @@ function App() {
 
     if (oldTrack.readyState === "ended") {
 
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(newStream => {
         const newTrack = newStream.getVideoTracks()[0]
         stream.removeTrack(oldTrack)
         stream.addTrack(newTrack)
@@ -233,12 +254,12 @@ function App() {
 
   function toggleAudio() {
 
-    
+
     const oldTrack = stream.getAudioTracks()[0];
 
     if (oldTrack.readyState === "ended") {
 
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(newStream => {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(newStream => {
         const newTrack = newStream.getAudioTracks()[0]
         stream.removeTrack(oldTrack)
         stream.addTrack(newTrack)
@@ -249,7 +270,7 @@ function App() {
       })
     }
     else if (oldTrack.readyState === "live") {
-      
+
       oldTrack.stop();
       setAudioStatus(false);
 
@@ -270,7 +291,7 @@ function App() {
     event.preventDefault();
     const name = event.target.name.value;
     let alreadyTaken = false;
-    Object.keys(users).map(key => {
+    Object.keys(users).forEach(key => {
       if (key !== yourID) {
         if (name === users[key]) {
           alreadyTaken = true;
@@ -321,6 +342,13 @@ function App() {
   let PartnerVideo;
   let endCallButton;
   let partnerName;
+  let ToggleMediaButtons;
+
+  const videobutton = videoStatus ? "outline-danger" : "danger";
+  const audiobutton = audioStatus ? "outline-danger" : "danger";
+  const videoIcon = videoStatus ? <CameraVideo /> : <CameraVideoOff />;
+  const audioIcon = audioStatus ? <Mic /> : <MicMute />;
+
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
     partnerName = <h4>Partner: {users[remoteUserId]}</h4>
@@ -329,11 +357,6 @@ function App() {
     );
 
   }
-  let ToggleMediaButtons;
-  const videobutton = videoStatus ? "outline-danger" : "danger";
-  const audiobutton = audioStatus ? "outline-danger" : "danger";
-  const videoIcon = videoStatus ? <CameraVideo /> : <CameraVideoOff />;
-  const audioIcon = audioStatus ? <Mic /> : <MicMute />;
   ToggleMediaButtons = (
     <>
       <Button variant={videobutton} onClick={toggleVideo} > {videoIcon} </Button>
@@ -342,19 +365,19 @@ function App() {
   )
 
 
-  let incomingCall;
-  if (receivingCall && users[remoteUserId]) {
-    incomingCall = (
-      <div>
-        <h4>{caller} is calling you</h4>
-        <button onClick={acceptCall}>Accept</button>
-      </div>
-    )
-  }
+  // let incomingCall;
+  // if (receivingCall && users[remoteUserId]) {
+  //   incomingCall = (
+  //     <div>
+  //       <h4>{caller} is calling you</h4>
+  //       <button onClick={acceptCall}>Accept</button>
+  //     </div>
+  //   )
+  // }
 
   let professorOnline;
   if (users[yourID] !== "professor") {
-    Object.keys(users).map(key => {
+    Object.keys(users).forEach(key => {
       if (key !== yourID) {
         if (users[key] === "professor") {
           professorOnline = "Professor online";
@@ -370,7 +393,7 @@ function App() {
         {CallUserList}
       </Row>
       <Row>
-        {incomingCall}
+        {/* {incomingCall} */}
         {endCallButton}
       </Row>
 
@@ -392,7 +415,12 @@ function App() {
       <Row>
         <h5 style={{ color: "green", fontWeight: "bold", margin: 5 }}>{professorOnline}</h5>
       </Row>
-
+      <ReceivingCallModal
+        show={receivingCall}
+        caller={caller}
+        acceptCall={acceptCall}
+        onHide={() => { }}
+      />
       <ToastContainer autoClose={2000} />
     </Container>
   );
