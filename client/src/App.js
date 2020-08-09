@@ -40,23 +40,6 @@ const Row = styled.div`
   width: 100%;
 `;
 
-// const UserVideoComponent = styled.video`
-//   border: 1px solid grey;
-//   width: 50%;
-//   height: 50%;
-//   transform: rotateY(180deg);
-//   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-//   -moz-transform:rotateY(180deg); /* Firefox */
-// `;
-// const PartenrVideoComponent = styled.video`
-//   border: 1px solid blue;
-//   width: 100%;
-//   height: 70%;
-//   transform: rotateY(180deg);
-//   -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-//   -moz-transform:rotateY(180deg); /* Firefox */
-// `;
-
 function App() {
   const peer = useRef(null)
   const [yourID, setYourID] = useState("");
@@ -344,11 +327,6 @@ function App() {
   let partnerName;
   let ToggleMediaButtons;
 
-  const videobutton = videoStatus ? "outline-danger" : "danger";
-  const audiobutton = audioStatus ? "outline-danger" : "danger";
-  const videoIcon = videoStatus ? <CameraVideo /> : <CameraVideoOff />;
-  const audioIcon = audioStatus ? <Mic /> : <MicMute />;
-
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
     partnerName = <h4>Partner: {users[remoteUserId]}</h4>
@@ -357,12 +335,18 @@ function App() {
     );
 
   }
+  
+  const videobutton = videoStatus ? "success" : "danger";
+  const audiobutton = audioStatus ? "success" : "danger";
+  const videoIcon = videoStatus ? <CameraVideo size={50} /> : <CameraVideoOff size={50} />;
+  const audioIcon = audioStatus ? <Mic size={50} /> : <MicMute size={50} />;
   ToggleMediaButtons = (
     <>
-      <Button variant={videobutton} onClick={toggleVideo} > {videoIcon} </Button>
-      <Button variant={audiobutton} onClick={toggleAudio}> {audioIcon} </Button>
+      <Button variant={videobutton} onClick={toggleVideo} style={{ margin:5 }}> {videoIcon} </Button>
+      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin:5 }}> {audioIcon} </Button>
     </>
   )
+
 
 
   // let incomingCall;
