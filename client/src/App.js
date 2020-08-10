@@ -267,15 +267,15 @@ function App() {
 
   const changeNameInput = (
     <Form onSubmit={changeName}>
-      <Row>
-        <Form.Group controlId="name" >
-          <Form.Label>Change Display name</Form.Label>
-          <Form.Control type="text" placeholder="Enter name" />
-        </Form.Group>
-      </Row>
-      <Button variant="primary" type="submit">
-        Change Name
+      <Form.Group controlId="name" >
+        <Form.Label>Change Display name</Form.Label>
+
+        <Form.Control type="text" placeholder="Enter name" />
+      </Form.Group>
+      <Button variant="primary" type="submit" size="sm">
+        <small>Change Name</small>
       </Button>
+
     </Form>
   );
 
@@ -301,26 +301,27 @@ function App() {
   let PartnerVideo;
   let endCallButton;
   let partnerName;
-  let ToggleMediaButtons;
-
+  
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
-    partnerName = <h4>Partner: {users[remoteUserId]}</h4>
     endCallButton = (
-      <Button variant="danger" onClick={() => endCall()} >End Call</Button>
+      <div className="endCallButton">
+        <Button variant="danger" onClick={() => endCall()} >End Call</Button>
+      </div>
     );
-
+    
   }
-
+  
+  let ToggleMediaButtons;
   const videobutton = videoStatus ? "success" : "danger";
   const audiobutton = audioStatus ? "success" : "danger";
-  const videoIcon = videoStatus ? <CameraVideo size={30} /> : <CameraVideoOff size={30} />;
-  const audioIcon = audioStatus ? <Mic size={30} /> : <MicMute size={30} />;
+  const videoIcon = videoStatus ? <CameraVideo size={20} /> : <CameraVideoOff size={20} />;
+  const audioIcon = audioStatus ? <Mic size={20} /> : <MicMute size={20} />;
   ToggleMediaButtons = (
-    <div className="mediaButtons">
+    <Row className="justify-content-md-center">
       <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
       <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
-    </div>
+    </Row>
   )
 
 
@@ -368,14 +369,14 @@ function App() {
     <>
       {incommintCall}
       {PartnerVideo}
-      {UserVideo}
-      {ToggleMediaButtons}
+      <div className="userElements">
+        {UserVideo}
+        {ToggleMediaButtons}
+      </div>
+      {endCallButton}
       <Container style={{ color: "white" }} fluid>
         <Row>
           {CallUserList}
-        </Row>
-        <Row>
-          {endCallButton}
         </Row>
 
         <Row>
@@ -388,12 +389,10 @@ function App() {
             </Row>
           </Col>
 
-          {/* {partnerName} */}
-
         </Row>
         <ToastContainer autoClose={2000} />
       </Container>
-      
+
     </>
   );
 }

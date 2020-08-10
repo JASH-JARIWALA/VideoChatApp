@@ -22,17 +22,34 @@ code {
   -moz-transform: rotateY(180deg); /* Firefox */
 }
 
-.userVideo {
+.userElements {
   position: absolute;
-  bottom: 10%;
-  right: 10%;
-  width: 30%;
-  height: 30%;
+  bottom: 0%;
+  right: 5%;  
+  width: 40%;
+  height: 40%;
+}
+
+.userVideo {  
+  width: 100%;
+  height: 80%;
   z-index: 1;
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg); /* Safari and Chrome */
   -moz-transform: rotateY(180deg); /* Firefox */
 }
+
+.mediaButtons {  
+  height: 20%;  
+}
+.partnerName{
+  position: absolute;
+  bottom: 1%;
+  right: 5%;
+  color: white;
+  text-decoration: solid;
+}
+
 .incommingCall{
   z-index: 2;
   position: absolute;
@@ -41,8 +58,11 @@ code {
   background-color: black;
 }
 
-.mediaButtons {
+
+
+.endCallButton {
   position: absolute;
-  bottom: 10%;
-  left: 5%;
+  bottom: 2%;
+  left: 10%;
 }
+
