@@ -9,35 +9,6 @@ import { CameraVideo, CameraVideoOff, MicMute, Mic } from 'react-bootstrap-icons
 const incommingCallAudio = new Audio('./skype_remix_2.mp3')
 incommingCallAudio.loop = true
 
-function ReceivingCallModal(props) {
-
-  return (
-    <Modal
-      {...props}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-      backdrop="static"
-      keyboard={false}
-    >
-      <Modal.Header closeButton style={{ background: "grey" }}>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Receiving Call
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body style={{ background: "grey" }}>
-        <div style={{ background: "grey" }}>
-          <h4>{props.caller} is calling you.</h4>
-        </div>
-
-      </Modal.Body>
-      <Modal.Footer style={{ background: "grey" }}>
-        <Button variant="danger" onClick={props.onHide}>Reject</Button>
-        <Button variant="success" onClick={props.acceptCall}>Accept</Button>
-      </Modal.Footer>
-    </Modal>
-  )
-}
 const Row = styled.div`
   display: flex;
   width: 100%;
@@ -343,13 +314,13 @@ function App() {
 
   const videobutton = videoStatus ? "success" : "danger";
   const audiobutton = audioStatus ? "success" : "danger";
-  const videoIcon = videoStatus ? <CameraVideo size={50} /> : <CameraVideoOff size={50} />;
-  const audioIcon = audioStatus ? <Mic size={50} /> : <MicMute size={50} />;
+  const videoIcon = videoStatus ? <CameraVideo size={30} /> : <CameraVideoOff size={30} />;
+  const audioIcon = audioStatus ? <Mic size={30} /> : <MicMute size={30} />;
   ToggleMediaButtons = (
-    <>
+    <div className="mediaButtons">
       <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
       <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
-    </>
+    </div>
   )
 
 
@@ -396,6 +367,9 @@ function App() {
   return (
     <>
       {incommintCall}
+      {PartnerVideo}
+      {UserVideo}
+      {ToggleMediaButtons}
       <Container style={{ color: "white" }} fluid>
         <Row>
           {CallUserList}
@@ -407,22 +381,19 @@ function App() {
         <Row>
 
           <Col>
-            {UserVideo}
-            <Row>{ToggleMediaButtons}</Row>
             <h4>You: {users[yourID]}</h4>
             {changeNameInput}
             <Row style={{ color: "green", fontWeight: "bold" }}>
               {professorOnline}
             </Row>
           </Col>
-          <Col>
-            {PartnerVideo}
-            {partnerName}
-          </Col>
+
+          {/* {partnerName} */}
 
         </Row>
         <ToastContainer autoClose={2000} />
       </Container>
+      
     </>
   );
 }
