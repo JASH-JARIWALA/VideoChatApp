@@ -3,11 +3,14 @@ import './App.css';
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
-import { Button, Col, Form, Container, Modal } from 'react-bootstrap';
+import { Button, Col, Form, Container, Modal, Card } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import { CameraVideo, CameraVideoOff, MicMute, Mic } from 'react-bootstrap-icons';
+const incommingCallAudio = new Audio('./skype_remix_2.mp3')
+incommingCallAudio.loop = true
 
 function ReceivingCallModal(props) {
+
   return (
     <Modal
       {...props}
@@ -17,18 +20,18 @@ function ReceivingCallModal(props) {
       backdrop="static"
       keyboard={false}
     >
-      <Modal.Header closeButton style={{background: "grey"}}>
+      <Modal.Header closeButton style={{ background: "grey" }}>
         <Modal.Title id="contained-modal-title-vcenter">
           Receiving Call
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{background: "grey"}}>
-        <div style={{background: "grey"}}>
+      <Modal.Body style={{ background: "grey" }}>
+        <div style={{ background: "grey" }}>
           <h4>{props.caller} is calling you.</h4>
         </div>
 
       </Modal.Body>
-      <Modal.Footer style={{background: "grey"}}>
+      <Modal.Footer style={{ background: "grey" }}>
         <Button variant="danger" onClick={props.onHide}>Reject</Button>
         <Button variant="success" onClick={props.acceptCall}>Accept</Button>
       </Modal.Footer>
@@ -162,6 +165,8 @@ function App() {
 
 
   function acceptCall() {
+    incommingCallAudio.pause()
+    incommingCallAudio.currentTime = 0;
     setCallAccepted(true);
     setReceivingCall(false);
     setCallButtonDisability(true);
@@ -335,29 +340,18 @@ function App() {
     );
 
   }
-  
+
   const videobutton = videoStatus ? "success" : "danger";
   const audiobutton = audioStatus ? "success" : "danger";
   const videoIcon = videoStatus ? <CameraVideo size={50} /> : <CameraVideoOff size={50} />;
   const audioIcon = audioStatus ? <Mic size={50} /> : <MicMute size={50} />;
   ToggleMediaButtons = (
     <>
-      <Button variant={videobutton} onClick={toggleVideo} style={{ margin:5 }}> {videoIcon} </Button>
-      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin:5 }}> {audioIcon} </Button>
+      <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
+      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
     </>
   )
 
-
-
-  // let incomingCall;
-  // if (receivingCall && users[remoteUserId]) {
-  //   incomingCall = (
-  //     <div>
-  //       <h4>{caller} is calling you</h4>
-  //       <button onClick={acceptCall}>Accept</button>
-  //     </div>
-  //   )
-  // }
 
   let professorOnline;
   if (users[yourID] !== "professor") {
@@ -370,43 +364,66 @@ function App() {
     })
   }
 
+  let incommintCall;
+  if ((receivingCall && users[remoteUserId])) {
+    incommingCallAudio.play()
+
+    incommintCall = (
+      <div className="incommingCall">
+
+        <Card className="text-center" style={{ background: "black", color: "white" }}>
+          <Card.Header><h2>{caller} is calling you</h2></Card.Header>
+          <Card.Body>
+            <Card.Title></Card.Title>
+            <Container>
+              <Row>
+                <Col><Button size="lg" variant="danger" onClick={() => { }}>Reject</Button></Col>
+                <Col><Button size="lg" variant="success" onClick={acceptCall}>Accept</Button></Col>
+              </Row>
+            </Container>
+          </Card.Body>
+          <Card.Footer className="text-muted"></Card.Footer>
+        </Card>
+
+      </div>
+    )
+  } else {
+    incommingCallAudio.pause()
+    incommingCallAudio.currentTime = 0;
+  }
+
 
   return (
-    <Container style={{ color: "white" }} fluid>
-      <Row>
-        {CallUserList}
-      </Row>
-      <Row>
-        {/* {incomingCall} */}
-        {endCallButton}
-      </Row>
+    <>
+      {incommintCall}
+      <Container style={{ color: "white" }} fluid>
+        <Row>
+          {CallUserList}
+        </Row>
+        <Row>
+          {endCallButton}
+        </Row>
 
-      <Row>
+        <Row>
 
-        <Col>
-          {UserVideo}
-          <Row>{ToggleMediaButtons}</Row>
-          <h4>You: {users[yourID]}</h4>
-          {changeNameInput}
-        </Col>
-        <Col>
-          {PartnerVideo}
-          {partnerName}
-        </Col>
+          <Col>
+            {UserVideo}
+            <Row>{ToggleMediaButtons}</Row>
+            <h4>You: {users[yourID]}</h4>
+            {changeNameInput}
+            <Row style={{ color: "green", fontWeight: "bold" }}>
+              {professorOnline}
+            </Row>
+          </Col>
+          <Col>
+            {PartnerVideo}
+            {partnerName}
+          </Col>
 
-      </Row>
-
-      <Row>
-        <h5 style={{ color: "green", fontWeight: "bold", margin: 5 }}>{professorOnline}</h5>
-      </Row>
-      <ReceivingCallModal
-        show={receivingCall}
-        caller={caller}
-        acceptCall={acceptCall}
-        onHide={() => { }}
-      />
-      <ToastContainer autoClose={2000} />
-    </Container>
+        </Row>
+        <ToastContainer autoClose={2000} />
+      </Container>
+    </>
   );
 }
 
