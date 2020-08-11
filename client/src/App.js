@@ -3,9 +3,9 @@ import './App.css';
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
-import { Button, Col, Form, Container, Modal, Card } from 'react-bootstrap';
+import { Button, Col, Form, Container, Card } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
-import { CameraVideo, CameraVideoOff, MicMute, Mic } from 'react-bootstrap-icons';
+import { CameraVideo, CameraVideoOff, MicMute, Mic, ArrowRepeat } from 'react-bootstrap-icons';
 const incommingCallAudio = new Audio('./skype_remix_2.mp3')
 incommingCallAudio.loop = true
 
@@ -33,6 +33,7 @@ function App() {
 
   const [videoStatus, setVideoStatus] = useState(true);
   const [audioStatus, setAudioStatus] = useState(true);
+  const [cameraMode, setCameraMode] = useState('user')
 
   useEffect(() => {
     // 1. connect to server
@@ -40,7 +41,7 @@ function App() {
     // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
     socket.current = io.connect("");
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode}, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
@@ -130,7 +131,6 @@ function App() {
       peer.current.destroy(error.message);
     })
 
-
   }
 
 
@@ -189,7 +189,7 @@ function App() {
 
     if (oldTrack.readyState === "ended") {
 
-      navigator.mediaDevices.getUserMedia({ video: true }).then(newStream => {
+      navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode} }).then(newStream => {
         const newTrack = newStream.getVideoTracks()[0]
         stream.removeTrack(oldTrack)
         stream.addTrack(newTrack)
@@ -240,6 +240,23 @@ function App() {
 
   }
 
+  function toggleCamera() {
+    const oldTrack = stream.getVideoTracks()[0]; 
+    oldTrack.stop()   
+      setCameraMode(cameraMode === 'user' ? 'environment' : 'user')
+      navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode} }).then(newStream => {
+        const newTrack = newStream.getVideoTracks()[0]
+        console.log(newTrack)
+        toast(newTrack.id)        
+        stream.removeTrack(oldTrack)
+        stream.addTrack(newTrack)
+        setVideoStatus(true);
+        if (callAccepted) {
+          peer.current.replaceTrack(oldTrack, newTrack, stream);
+        }
+      })
+    
+  }
 
 
   function endCall(key) {
@@ -301,7 +318,7 @@ function App() {
   let PartnerVideo;
   let endCallButton;
   let partnerName;
-  
+
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
     endCallButton = (
@@ -309,9 +326,9 @@ function App() {
         <Button variant="danger" onClick={() => endCall()} >End Call</Button>
       </div>
     );
-    
+
   }
-  
+
   let ToggleMediaButtons;
   const videobutton = videoStatus ? "success" : "danger";
   const audiobutton = audioStatus ? "success" : "danger";
@@ -321,6 +338,9 @@ function App() {
     <Row className="justify-content-md-center">
       <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
       <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
+      {videoStatus &&
+      <Button onClick={toggleCamera} style={{ margin: 5 }}> <ArrowRepeat /> </Button>
+      }
     </Row>
   )
 

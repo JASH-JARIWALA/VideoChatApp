@@ -17,6 +17,16 @@ code {
   width: 100%;
   height: 100%;
   z-index: -1;
+  /*transform: rotateY(180deg);*/
+  /*-webkit-transform: rotateY(180deg); /* Safari and Chrome */
+  /*-moz-transform: rotateY(180deg); /* Firefox */
+}
+
+.partnerVideoFlipped {
+  position: absolute;  
+  width: 100%;
+  height: 100%;
+  z-index: -1;
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg); /* Safari and Chrome */
   -moz-transform: rotateY(180deg); /* Firefox */
@@ -27,7 +37,7 @@ code {
   bottom: 0%;
   right: 5%;  
   width: 40%;
-  height: 40%;
+  height: 40%;  
 }
 
 .userVideo {  
@@ -66,3 +76,8 @@ code {
   left: 10%;
 }
 
+.flipPartnerVideoButton{
+  position: absolute;
+  bottom: 50%;
+  right: 0%;
+}
