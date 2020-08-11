@@ -12,6 +12,7 @@
     "react-bootstrap": "^1.1.1",
     "react-bootstrap-icons": "^1.0.3-alpha5",
     "react-dom": "^16.13.1",
+    "react-loader-spinner": "^3.1.14",
     "react-scripts": "3.4.1",
     "react-toastify": "^6.0.8",
     "simple-peer": "9.6.2",

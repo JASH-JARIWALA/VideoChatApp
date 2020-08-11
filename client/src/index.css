@@ -22,6 +22,16 @@ code {
   /*-moz-transform: rotateY(180deg); /* Firefox */
 }
 
+.userElementsLoading{
+  position: absolute;
+  bottom: 0%;
+  right: 5%;  
+  width: 40%;
+  height: 40%;  
+  background-color: black;
+  z-index: 1;
+}
+
 .userElements {
   position: absolute;
   bottom: 0%;
@@ -42,6 +52,7 @@ code {
 .mediaButtons {  
   height: 20%;  
 }
+
 .partnerName{
   position: absolute;
   bottom: 1%;
@@ -71,3 +82,4 @@ code {
   bottom: 50%;
   right: 0%;
 }
+

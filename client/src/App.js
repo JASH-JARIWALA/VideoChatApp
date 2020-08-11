@@ -6,8 +6,20 @@ import styled from "styled-components";
 import { Button, Col, Form, Container, Card } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import { CameraVideo, CameraVideoOff, MicMute, Mic, ArrowRepeat } from 'react-bootstrap-icons';
+import Loader from 'react-loader-spinner'
+
 const incommingCallAudio = new Audio('./skype_remix_2.mp3')
 incommingCallAudio.loop = true
+
+const LoadingTailSpin = () => {
+  return (
+    <Loader
+      type="TailSpin"
+      color="#00BFFF"      
+    // timeout={3000}
+    />
+  )
+}
 
 const Row = styled.div`
   display: flex;
@@ -23,6 +35,7 @@ function App() {
   const [caller, setCaller] = useState("");
   const [callerSignal, setCallerSignal] = useState();
   const [callAccepted, setCallAccepted] = useState(false);
+  const [userMediaLoading, setUserMediaLoading] = useState(false);
 
   const [callButtonDisability, setCallButtonDisability] = useState(false);
   const [remoteUserId, setRemoteUserId] = useState("");
@@ -41,7 +54,7 @@ function App() {
     // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
     socket.current = io.connect("");
-    navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode}, audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode }, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
@@ -189,7 +202,7 @@ function App() {
 
     if (oldTrack.readyState === "ended") {
 
-      navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode} }).then(newStream => {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
         const newTrack = newStream.getVideoTracks()[0]
         stream.removeTrack(oldTrack)
         stream.addTrack(newTrack)
@@ -241,21 +254,25 @@ function App() {
   }
 
   function toggleCamera() {
-    const oldTrack = stream.getVideoTracks()[0]; 
-    oldTrack.stop()   
-      setCameraMode(cameraMode === 'user' ? 'environment' : 'user')
-      navigator.mediaDevices.getUserMedia({ video: {facingMode: cameraMode} }).then(newStream => {
-        const newTrack = newStream.getVideoTracks()[0]
-        console.log(newTrack)
-        toast(newTrack.id)        
-        stream.removeTrack(oldTrack)
-        stream.addTrack(newTrack)
-        setVideoStatus(true);
-        if (callAccepted) {
-          peer.current.replaceTrack(oldTrack, newTrack, stream);
-        }
-      })
-    
+    setUserMediaLoading(true);
+    setTimeout(() => {
+      setUserMediaLoading(false);
+    }, 1700);
+    const newCameraMode = cameraMode === 'user' ? 'environment' : 'user';
+    const oldTrack = stream.getVideoTracks()[0];
+    oldTrack.stop()
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
+      const newTrack = newStream.getVideoTracks()[0]
+      console.log(newTrack)
+      toast(newTrack.id)
+      stream.removeTrack(oldTrack)
+      stream.addTrack(newTrack)
+      setVideoStatus(true);
+      if (callAccepted) {
+        peer.current.replaceTrack(oldTrack, newTrack, stream);
+      }
+    })
+    setCameraMode(newCameraMode)
   }
 
 
@@ -339,7 +356,7 @@ function App() {
       <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
       <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
       {videoStatus &&
-      <Button onClick={toggleCamera} style={{ margin: 5 }}> <ArrowRepeat /> </Button>
+        <Button onClick={toggleCamera} style={{ margin: 5 }}> <ArrowRepeat /> </Button>
       }
     </Row>
   )
@@ -389,6 +406,9 @@ function App() {
     <>
       {incommintCall}
       {PartnerVideo}
+      <div className="userElementsLoading" hidden={!userMediaLoading}>
+        <LoadingTailSpin  />
+      </div>
       <div className="userElements">
         {UserVideo}
         {ToggleMediaButtons}
