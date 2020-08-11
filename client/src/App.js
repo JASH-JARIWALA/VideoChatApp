@@ -15,7 +15,7 @@ const LoadingTailSpin = () => {
   return (
     <Loader
       type="TailSpin"
-      color="#00BFFF"      
+      color="#00BFFF"
     // timeout={3000}
     />
   )
@@ -197,7 +197,7 @@ function App() {
   }
 
   function toggleVideo() {
-
+    startUserMediaLoadingTimeout(400);
     const oldTrack = stream.getVideoTracks()[0];
 
     if (oldTrack.readyState === "ended") {
@@ -225,7 +225,7 @@ function App() {
   }
 
   function toggleAudio() {
-
+    startUserMediaLoadingTimeout(400);
 
     const oldTrack = stream.getAudioTracks()[0];
 
@@ -254,17 +254,12 @@ function App() {
   }
 
   function toggleCamera() {
-    setUserMediaLoading(true);
-    setTimeout(() => {
-      setUserMediaLoading(false);
-    }, 1700);
+    startUserMediaLoadingTimeout(1700);
     const newCameraMode = cameraMode === 'user' ? 'environment' : 'user';
     const oldTrack = stream.getVideoTracks()[0];
     oldTrack.stop()
     navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
       const newTrack = newStream.getVideoTracks()[0]
-      console.log(newTrack)
-      toast(newTrack.id)
       stream.removeTrack(oldTrack)
       stream.addTrack(newTrack)
       setVideoStatus(true);
@@ -275,6 +270,12 @@ function App() {
     setCameraMode(newCameraMode)
   }
 
+  const startUserMediaLoadingTimeout = (milisec) => {
+    setUserMediaLoading(true);
+    setTimeout(() => {
+      setUserMediaLoading(false);
+    }, milisec);
+  }
 
   function endCall(key) {
     socket.current.emit("endCall", { id: remoteUserId })
@@ -334,7 +335,6 @@ function App() {
 
   let PartnerVideo;
   let endCallButton;
-  let partnerName;
 
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
@@ -404,23 +404,27 @@ function App() {
 
   return (
     <>
+      {/* ABSOLUTE POSITIONED components  */}
       {incommintCall}
       {PartnerVideo}
-      <div className="userElementsLoading" hidden={!userMediaLoading}>
-        <LoadingTailSpin  />
-      </div>
       <div className="userElements">
         {UserVideo}
         {ToggleMediaButtons}
       </div>
+      <div className="userElementsLoadingBox" hidden={!userMediaLoading}>
+        <div className="userElementsLoading">
+          <LoadingTailSpin />
+        </div>
+      </div>
+
       {endCallButton}
+
+      {/* DEFAULT POSITIONED components  */}
       <Container style={{ color: "white" }} fluid>
         <Row>
           {CallUserList}
         </Row>
-
         <Row>
-
           <Col>
             <h4>You: {users[yourID]}</h4>
             {changeNameInput}
