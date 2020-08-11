@@ -17,19 +17,9 @@ code {
   width: 100%;
   height: 100%;
   z-index: -1;
-  /*transform: rotateY(180deg);*/
+  /*transform: rotateY(180deg);
   /*-webkit-transform: rotateY(180deg); /* Safari and Chrome */
   /*-moz-transform: rotateY(180deg); /* Firefox */
-}
-
-.partnerVideoFlipped {
-  position: absolute;  
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  transform: rotateY(180deg);
-  -webkit-transform: rotateY(180deg); /* Safari and Chrome */
-  -moz-transform: rotateY(180deg); /* Firefox */
 }
 
 .userElements {
@@ -44,9 +34,9 @@ code {
   width: 100%;
   height: 80%;
   z-index: 1;
-  transform: rotateY(180deg);
-  -webkit-transform: rotateY(180deg); /* Safari and Chrome */
-  -moz-transform: rotateY(180deg); /* Firefox */
+ /* transform: rotateY(180deg); 
+ /* -webkit-transform: rotateY(180deg); /* Safari and Chrome */
+ /* -moz-transform: rotateY(180deg); /* Firefox */
 }
 
 .mediaButtons {  
