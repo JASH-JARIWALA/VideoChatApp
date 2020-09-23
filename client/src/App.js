@@ -50,11 +50,11 @@ function App() {
 
   useEffect(() => {
     // 1. connect to server
-    socket.current = io.connect("http://localhost:8000/");
+    // socket.current = io.connect("http://localhost:8000/");
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
-    // socket.current = io.connect("");
+    socket.current = io.connect("");
     navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode }, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
@@ -73,13 +73,18 @@ function App() {
       setUsers(users);
     })
 
+    socket.current.on("receiveSignal", (data) => {
+      console.log("Reciving signal");
+      setCallerSignal(data.signal);
+    })
+    
     socket.current.on("receiveCall", (data) => {
       console.log("Reciving");
       setReceivingCall(true);
-      // setCallButtonDisability(true);
+      setCallButtonDisability(true);
       setCaller(data.from.name);
       setRemoteUserId(data.from.id);
-      setCallerSignal(data.signal);
+      // setCallerSignal(data.signal);
     })
 
 
@@ -94,7 +99,7 @@ function App() {
 
   function callPeer(id) {
 
-    // setCallButtonDisability(true);
+    setCallButtonDisability(true);
 
     peer.current = new Peer({
       initiator: true,
@@ -104,14 +109,19 @@ function App() {
 
     console.log("Call user")
     peer.current.on("signal", data => {
-      socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID });
+      socket.current.emit("callerSignal", { userToCall: id, signalData: data, from: yourID });
     });
+    socket.current.emit("callUser", { userToCall: id, from: yourID });
 
     peer.current.on("stream", stream => {
       if (partnerVideo.current) {
         partnerVideo.current.srcObject = stream;
       }
     });
+
+    peer.current.on('connect', () => {
+      toast.error("Connected")
+    })
 
     socket.current.on("callAccepted", signal => {
       setCallAccepted(true);
@@ -352,12 +362,13 @@ function App() {
   const audiobutton = audioStatus ? "success" : "danger";
   const videoIcon = videoStatus ? <CameraVideo size={20} /> : <CameraVideoOff size={20} />;
   const audioIcon = audioStatus ? <Mic size={20} /> : <MicMute size={20} />;
+  const mediaButtonDisable = !callAccepted;
   ToggleMediaButtons = (
     <Row className="justify-content-md-center">
-      <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }}> {videoIcon} </Button>
-      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }}> {audioIcon} </Button>
+      <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }} disabled={mediaButtonDisable}> {videoIcon} </Button>
+      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }} disabled={mediaButtonDisable}> {audioIcon} </Button>
       {videoStatus &&
-        <Button onClick={toggleCamera} style={{ margin: 5 }}> <ArrowRepeat /> </Button>
+        <Button onClick={toggleCamera} style={{ margin: 5 }} disabled={mediaButtonDisable}> <ArrowRepeat /> </Button>
       }
     </Row>
   )
@@ -375,7 +386,7 @@ function App() {
   }
 
   let incommintCall;
-  if ((receivingCall && users[remoteUserId])) {
+  if (receivingCall && users[remoteUserId] && callerSignal) {
     incommingCallAudio.play()
 
     incommintCall = (

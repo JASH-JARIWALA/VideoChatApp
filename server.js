@@ -35,6 +35,15 @@ io.on('connection', socket => {
             }
         })
 
+        socket.on("callerSignal", (data) => {
+            if (users[socket.id] === "professor") {                
+                console.log(`${users[data.from]} sent signal to ${users[data.userToCall]}`);
+                io.to(data.userToCall).emit('receiveSignal', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
+            } else {
+                // socket.emit("error", {message: "Student can't call"})
+            }
+        })
+
         socket.on("acceptCall", (data) => {
             io.to(data.to).emit('callAccepted', data.signal);
         });
