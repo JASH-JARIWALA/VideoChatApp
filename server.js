@@ -26,24 +26,27 @@ io.on('connection', socket => {
             io.sockets.emit("allUsers", users);
         })
         
-        
+        socket.on("giveCallPermission", (data) => {            
+            console.log(`${users[data.from]} gave call permission to ${users[data.to]}`);
+            io.to(data.to).emit('callPermissionGranted', {  from: data.from  });                        
+        })
 
         socket.on("callUser", (data) => {
-            if (users[socket.id] === "professor") {                
+            // if (users[socket.id] === "professor") {                
                 console.log(`${users[data.from]} called ${users[data.userToCall]}`);
                 io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
-            } else {
-                socket.emit("error", {message: "Student can't call"})
-            }
+            // } else {
+            //     socket.emit("error", {message: "Student can't call"})
+            // }
         })
 
         socket.on("callerSignal", (data) => {
-            if (users[socket.id] === "professor") {                
+            // if (users[socket.id] === "professor") {                
                 console.log(`${users[data.from]} sent signal to ${users[data.userToCall]}`);
                 io.to(data.userToCall).emit('receiveSignal', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
-            } else {
+            // } else {
                 // socket.emit("error", {message: "Student can't call"})
-            }
+            // }
         })
 
         socket.on("acceptCall", (data) => {

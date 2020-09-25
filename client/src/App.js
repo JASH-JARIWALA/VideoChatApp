@@ -37,6 +37,8 @@ function App() {
   const [callAccepted, setCallAccepted] = useState(false);
   const [userMediaLoading, setUserMediaLoading] = useState(false);
 
+  const [callingPermission, setCallingPermission] = useState(false);
+
   const [callButtonDisability, setCallButtonDisability] = useState(false);
   const [remoteUserId, setRemoteUserId] = useState("");
 
@@ -86,8 +88,7 @@ function App() {
       setCaller(data.from.name);
       setRemoteUserId(data.from.id);
       // setCallerSignal(data.signal);
-    })
-
+    })    
 
     socket.current.on("changeNameStatus", (response) => {
       if (response.status) {
@@ -97,6 +98,15 @@ function App() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    socket.current.on("callPermissionGranted", (data) => {
+      if (users[data.from]){
+        console.log("Permission Granted from "+ users[data.from]);      
+        setCallingPermission(data.from);
+      }
+    })
+  }, [users])
 
   function callPeer(id) {
 
@@ -131,6 +141,7 @@ function App() {
       peer.current.signal(signal);
       setCallButtonDisability(true);
       console.log("accepted");
+      setCallingPermission(false);
     });
 
 
@@ -207,6 +218,10 @@ function App() {
     })
 
 
+  }
+
+  function giveCallPermission(id) {
+    socket.current.emit("giveCallPermission", {from: yourID, to: id});
   }
 
   function toggleVideo() {
@@ -378,6 +393,7 @@ function App() {
 
   let UserVideo;
   let CallUserList;
+  let callFaculty;
   if (stream) {
     UserVideo = (
       <video className="userVideo" playsInline muted ref={userVideo} autoPlay />
@@ -388,12 +404,20 @@ function App() {
           return null;
         }
         return (
+          <>
           <Button variant="primary" onClick={() => callPeer(key)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[key]}</Button>
+          <Button variant="success" onClick={() => giveCallPermission(key)} disabled={callButtonDisability} style={{ margin: 5 }} >give Permission to {users[key]}</Button>          
+          </>
         );
       })
+    }else if(callingPermission){
+        callFaculty = (
+          <Button variant="primary" onClick={() => callPeer(callingPermission)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[callingPermission]}</Button>
+        )
     }
   }
 
+  
   let PartnerVideo;
   let endCallButton;
 
@@ -487,7 +511,7 @@ function App() {
       {/* DEFAULT POSITIONED components  */}
       <Container style={{ color: "white" }} fluid>
         <Row>
-          {CallUserList}
+          {CallUserList} {callFaculty}
         </Row>
         <Row>
           <Col>
