@@ -5,7 +5,7 @@ import Peer from "simple-peer";
 import styled from "styled-components";
 import { Button, Col, Form, Container, Card } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
-import { CameraVideo, CameraVideoOff, MicMute, Mic, ArrowRepeat } from 'react-bootstrap-icons';
+import { CameraVideo, CameraVideoOff, MicMute, Mic, ArrowBarUp } from 'react-bootstrap-icons';
 import Loader from 'react-loader-spinner'
 
 const incommingCallAudio = new Audio('./skype_remix_2.mp3')
@@ -46,6 +46,7 @@ function App() {
 
   const [videoStatus, setVideoStatus] = useState(true);
   const [audioStatus, setAudioStatus] = useState(true);
+  const [screenShareStatus, setScreenShareStatus] = useState(false);
   const [cameraMode, setCameraMode] = useState('user')
 
   useEffect(() => {
@@ -77,7 +78,7 @@ function App() {
       console.log("Reciving signal");
       setCallerSignal(data.signal);
     })
-    
+
     socket.current.on("receiveCall", (data) => {
       console.log("Reciving");
       setReceivingCall(true);
@@ -105,6 +106,7 @@ function App() {
       initiator: true,
       trickle: false,
       stream: stream,
+      reconnectTimer: true,
     });
 
     console.log("Call user")
@@ -120,7 +122,7 @@ function App() {
     });
 
     peer.current.on('connect', () => {
-      toast.error("Connected")
+      toast.info("Connected")
     })
 
     socket.current.on("callAccepted", signal => {
@@ -158,7 +160,6 @@ function App() {
   }
 
 
-
   function acceptCall() {
     incommingCallAudio.pause()
     incommingCallAudio.currentTime = 0;
@@ -171,6 +172,7 @@ function App() {
       initiator: false,
       trickle: false,
       stream: stream,
+      reconnectTimer: true,
     });
 
     peer.current.on("signal", data => {
@@ -208,30 +210,78 @@ function App() {
   }
 
   function toggleVideo() {
-    startUserMediaLoadingTimeout(400);
-    const oldTrack = stream.getVideoTracks()[0];
+    startUserMediaLoadingTimeout(1000);
 
-    if (oldTrack.readyState === "ended") {
-
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
-        const newTrack = newStream.getVideoTracks()[0]
-        stream.removeTrack(oldTrack)
-        stream.addTrack(newTrack)
-        setVideoStatus(true);
-        if (callAccepted) {
-          peer.current.replaceTrack(oldTrack, newTrack, stream);
-        }
-      })
+    if (screenShareStatus) {
+      toggleScreenShare();
     }
-    else if (oldTrack.readyState === "live") {
 
-      oldTrack.stop();
-      setVideoStatus(false);
+    setTimeout(() => {
+      const oldTrack = stream.getVideoTracks()[0];
 
-      if (callAccepted) {
-        peer.current.replaceTrack(oldTrack, oldTrack, stream);
+      if (oldTrack.readyState === "ended") {
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
+          const newTrack = newStream.getVideoTracks()[0]
+          stream.removeTrack(oldTrack)
+          stream.addTrack(newTrack)
+          setVideoStatus(true);
+          if (callAccepted) {
+            peer.current.replaceTrack(oldTrack, newTrack, stream);
+          }
+        })
       }
+      else if (oldTrack.readyState === "live") {
+
+        oldTrack.stop();
+        setVideoStatus(false);
+
+        if (callAccepted) {
+          peer.current.replaceTrack(oldTrack, oldTrack, stream);
+        }
+      }
+    }, 500);
+
+  }
+
+  function toggleScreenShare() {
+    startUserMediaLoadingTimeout(1000);
+
+    if (videoStatus) {
+      toggleVideo();
     }
+
+    setTimeout(() => {
+
+      const oldScreenTrack = stream.getVideoTracks()[0];
+
+      if (oldScreenTrack.readyState === "ended") {
+
+        navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(newStream => {
+          const newTrack = newStream.getVideoTracks()[0]
+          stream.removeTrack(oldScreenTrack)
+          stream.addTrack(newTrack)
+          setScreenShareStatus(true);
+          if (callAccepted) {
+            peer.current.replaceTrack(oldScreenTrack, newTrack, stream);
+          }
+          stream.getVideoTracks()[0].addEventListener('ended', () => {
+            setScreenShareStatus(false)
+          });
+        })
+      }
+      else if (oldScreenTrack.readyState === "live") {
+
+        oldScreenTrack.stop();
+        setScreenShareStatus(false);
+
+        if (callAccepted) {
+          peer.current.replaceTrack(oldScreenTrack, oldScreenTrack, stream);
+        }
+      }
+
+
+    }, 500);
 
   }
 
@@ -264,22 +314,22 @@ function App() {
 
   }
 
-  function toggleCamera() {
-    startUserMediaLoadingTimeout(1700);
-    const newCameraMode = cameraMode === 'user' ? 'environment' : 'user';
-    const oldTrack = stream.getVideoTracks()[0];
-    oldTrack.stop()
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
-      const newTrack = newStream.getVideoTracks()[0]
-      stream.removeTrack(oldTrack)
-      stream.addTrack(newTrack)
-      setVideoStatus(true);
-      if (callAccepted) {
-        peer.current.replaceTrack(oldTrack, newTrack, stream);
-      }
-    })
-    setCameraMode(newCameraMode)
-  }
+  // function toggleCamera() {
+  //   startUserMediaLoadingTimeout(1700);
+  //   const newCameraMode = cameraMode === 'user' ? 'environment' : 'user';
+  //   const oldTrack = stream.getVideoTracks()[0];
+  //   oldTrack.stop()
+  //   navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode } }).then(newStream => {
+  //     const newTrack = newStream.getVideoTracks()[0]
+  //     stream.removeTrack(oldTrack)
+  //     stream.addTrack(newTrack)
+  //     setVideoStatus(true);
+  //     if (callAccepted) {
+  //       peer.current.replaceTrack(oldTrack, newTrack, stream);
+  //     }
+  //   })
+  //   setCameraMode(newCameraMode)
+  // }
 
   const startUserMediaLoadingTimeout = (milisec) => {
     setUserMediaLoading(true);
@@ -360,16 +410,19 @@ function App() {
   let ToggleMediaButtons;
   const videobutton = videoStatus ? "success" : "danger";
   const audiobutton = audioStatus ? "success" : "danger";
+  const screenSharebutton = screenShareStatus ? "success" : "danger";
   const videoIcon = videoStatus ? <CameraVideo size={20} /> : <CameraVideoOff size={20} />;
   const audioIcon = audioStatus ? <Mic size={20} /> : <MicMute size={20} />;
+  const screenShareIcon = <ArrowBarUp size={20} />
   const mediaButtonDisable = !callAccepted;
   ToggleMediaButtons = (
     <Row className="justify-content-md-center">
       <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }} disabled={mediaButtonDisable}> {videoIcon} </Button>
       <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }} disabled={mediaButtonDisable}> {audioIcon} </Button>
-      {videoStatus &&
+      <Button variant={screenSharebutton} onClick={toggleScreenShare} style={{ margin: 5 }} disabled={mediaButtonDisable}> {screenShareIcon} </Button>
+      {/* {videoStatus &&
         <Button onClick={toggleCamera} style={{ margin: 5 }} disabled={mediaButtonDisable}> <ArrowRepeat /> </Button>
-      }
+      } */}
     </Row>
   )
 

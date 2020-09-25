@@ -25,6 +25,8 @@ io.on('connection', socket => {
             delete users[socket.id];
             io.sockets.emit("allUsers", users);
         })
+        
+        
 
         socket.on("callUser", (data) => {
             if (users[socket.id] === "professor") {                
