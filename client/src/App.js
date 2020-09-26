@@ -196,6 +196,9 @@ function App() {
 
     peer.current.signal(callerSignal);
 
+    peer.current.on('connect', () => {
+      toast.info("Connected")
+    })
 
     peer.current.on("error", (error) => {
       console.log(error);
