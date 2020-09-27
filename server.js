@@ -1,4 +1,4 @@
-let PORT = process.env.PORT || 8000; 
+let PORT = process.env.PORT || 8000;
 
 const express = require("express");
 const http = require("http");
@@ -14,7 +14,7 @@ app.use(express.static('client/build'))
 
 io.on('connection', socket => {
 
-    if (!users[socket.id]) {        
+    if (!users[socket.id]) {
         users[socket.id] = (++count).toString();
         console.log(users[socket.id]);
         socket.emit("yourID", socket.id);
@@ -25,16 +25,16 @@ io.on('connection', socket => {
             delete users[socket.id];
             io.sockets.emit("allUsers", users);
         })
-        
-        socket.on("giveCallPermission", (data) => {            
+
+        socket.on("giveCallPermission", (data) => {
             console.log(`${users[data.from]} gave call permission to ${users[data.to]}`);
-            io.to(data.to).emit('callPermissionGranted', {  from: data.from  });                        
+            io.to(data.to).emit('callPermissionGranted', { from: data.from });
         })
 
         socket.on("callUser", (data) => {
             // if (users[socket.id] === "professor") {                
-                console.log(`${users[data.from]} called ${users[data.userToCall]}`);
-                io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
+            console.log(`${users[data.from]} called ${users[data.userToCall]}`);
+            io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
             // } else {
             //     socket.emit("error", {message: "Student can't call"})
             // }
@@ -42,10 +42,10 @@ io.on('connection', socket => {
 
         socket.on("callerSignal", (data) => {
             // if (users[socket.id] === "professor") {                
-                console.log(`${users[data.from]} sent signal to ${users[data.userToCall]}`);
-                io.to(data.userToCall).emit('receiveSignal', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
+            console.log(`${users[data.from]} sent signal to ${users[data.userToCall]}`);
+            io.to(data.userToCall).emit('receiveSignal', { signal: data.signalData, from: { id: data.from, name: users[data.from] } });
             // } else {
-                // socket.emit("error", {message: "Student can't call"})
+            // socket.emit("error", {message: "Student can't call"})
             // }
         })
 
@@ -54,8 +54,9 @@ io.on('connection', socket => {
         });
 
         socket.on("endCall", (data) => {
+            console.log(users[socket.id] + " ended call with " + users[data.id]);
             io.to(data.id).emit("callEnded");
-            socket.emit("callEnded");            
+            // socket.emit("callEnded");            
         })
 
 
@@ -68,12 +69,12 @@ io.on('connection', socket => {
                     }
                 }
             })
-            if (alreadyTaken) {                
-                socket.emit("changeNameStatus", {status:false});
+            if (alreadyTaken) {
+                socket.emit("changeNameStatus", { status: false });
             } else {
                 users[socket.id] = data.name;
                 io.sockets.emit("allUsers", users);
-                socket.emit("changeNameStatus", {status:true});
+                socket.emit("changeNameStatus", { status: true });
             }
         })
 
@@ -81,7 +82,7 @@ io.on('connection', socket => {
             console.log(videoStream)
             socket.emit("videoStatusChange", videoStream)
         })
-        
+
         socket.on("audiostream", (audioStream) => {
             console.log(audioStream)
             socket.emit("audioStatusChange", audioStream)

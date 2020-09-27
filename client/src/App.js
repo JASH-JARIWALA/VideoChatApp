@@ -119,7 +119,7 @@ function App() {
       reconnectTimer: true,
     });
 
-    console.log("Call user")
+    console.log("Call user");
     peer.current.on("signal", data => {
       socket.current.emit("callerSignal", { userToCall: id, signalData: data, from: yourID });
     });
@@ -161,7 +161,14 @@ function App() {
 
 
     socket.current.on("callEnded", () => {
-      peer.current.destroy("Call ended");
+      // peer.current.destroy("Call ended");
+      setRemoteUserId("");
+      setCallAccepted(false);
+      setCallButtonDisability(false);
+
+      socket.current.removeListener("callAccepted");
+      socket.current.removeListener("videoStatusChange");
+      socket.current.removeListener("audioStatusChange");
     })
 
     socket.current.on("error", (error) => {
@@ -217,10 +224,23 @@ function App() {
 
 
     socket.current.on("callEnded", () => {
-      peer.current.destroy("Call ended");
+      // peer.current.destroy("Call ended");
+      setCallAccepted(false);
+      setCaller("");
+      setRemoteUserId("");
+      setCallerSignal();
+      setCallButtonDisability(false);
+
+      socket.current.removeListener("videoStatusChange");
+      socket.current.removeListener("audioStatusChange");
     })
 
 
+  }
+
+  function endCall(key) {
+    socket.current.emit("endCall", { id: remoteUserId })
+    peer.current.destroy("Call ended");
   }
 
   function giveCallPermission(id) {
@@ -356,9 +376,6 @@ function App() {
     }, milisec);
   }
 
-  function endCall(key) {
-    socket.current.emit("endCall", { id: remoteUserId })
-  }
 
   function changeName(event) {
     event.preventDefault();
