@@ -117,16 +117,7 @@ function App() {
       trickle: false,
       stream: stream,
       // reconnectTimer: true,
-      // config: {
-      //   iceServers: [
-      //     {urls: "stun:stun.stunprotocol.org"},
-      //     {
-      //       urls: 'turn:numb.viagenie.ca',
-      //       credential: 'muazkh',
-      //       username: 'webrtc@live.com'
-      //     },
-      //   ]
-      // }
+     config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
     });
 
     console.log("Call user");
@@ -201,16 +192,7 @@ function App() {
       trickle: false,
       stream: stream,
       // reconnectTimer: true,
-      // config: {
-      //   iceServers: [
-      //     {urls: "stun:stun.stunprotocol.org"},
-      //     {
-      //       urls: 'turn:numb.viagenie.ca',
-      //       credential: 'muazkh',
-      //       username: 'webrtc@live.com'
-      //     },
-      //   ]
-      // }
+     config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
     });
 
     peer.current.on("signal", data => {
