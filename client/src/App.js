@@ -114,9 +114,19 @@ function App() {
 
     peer.current = new Peer({
       initiator: true,
-      // trickle: false,
+      trickle: false,
       stream: stream,
       // reconnectTimer: true,
+      config: {
+        iceServers: [
+          {urls: "stun:stun.stunprotocol.org"},
+          {
+            urls: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
+          },
+        ]
+      }
     });
 
     console.log("Call user");
@@ -188,9 +198,19 @@ function App() {
 
     peer.current = new Peer({
       initiator: false,
-      // trickle: false,
+      trickle: false,
       stream: stream,
       // reconnectTimer: true,
+      config: {
+        iceServers: [
+          {urls: "stun:stun.stunprotocol.org"},
+          {
+            urls: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
+          },
+        ]
+      }
     });
 
     peer.current.on("signal", data => {
