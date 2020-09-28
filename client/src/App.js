@@ -119,7 +119,7 @@ function App() {
       // reconnectTimer: true,
       config: {
         iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=tcp' },
+          {urls: "stun:stun.stunprotocol.org"},
           {
             urls: 'turn:numb.viagenie.ca',
             credential: 'muazkh',
@@ -203,7 +203,7 @@ function App() {
       // reconnectTimer: true,
       config: {
         iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=tcp' },
+          {urls: "stun:stun.stunprotocol.org"},
           {
             urls: 'turn:numb.viagenie.ca',
             credential: 'muazkh',
