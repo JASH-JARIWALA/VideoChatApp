@@ -53,11 +53,11 @@ function App() {
 
   useEffect(() => {
     // 1. connect to server
-    socket.current = io.connect("http://localhost:8001/");
+    // socket.current = io.connect("http://localhost:8001/");
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
-    // socket.current = io.connect("");
+    socket.current = io.connect("");
     navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode }, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
