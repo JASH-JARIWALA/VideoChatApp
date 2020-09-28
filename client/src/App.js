@@ -53,11 +53,11 @@ function App() {
 
   useEffect(() => {
     // 1. connect to server
-    // socket.current = io.connect("http://localhost:8000/");
+    socket.current = io.connect("http://localhost:8001/");
     // socket.current = io.connect("http://192.168.29.67:8000/");
     // socket.current = io.connect("http://192.168.1.105:8000/");
     // socket.current = io.connect("https://ielts-video-chat.herokuapp.com/");
-    socket.current = io.connect("");
+    // socket.current = io.connect("");
     navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraMode }, audio: true }).then(stream => {
       setStream(stream);
       if (userVideo.current) {
@@ -88,7 +88,7 @@ function App() {
       setCaller(data.from.name);
       setRemoteUserId(data.from.id);
       // setCallerSignal(data.signal);
-    })    
+    })
 
     socket.current.on("changeNameStatus", (response) => {
       if (response.status) {
@@ -101,8 +101,8 @@ function App() {
 
   useEffect(() => {
     socket.current.on("callPermissionGranted", (data) => {
-      if (users[data.from]){
-        console.log("Permission Granted from "+ users[data.from]);      
+      if (users[data.from]) {
+        console.log("Permission Granted from " + users[data.from]);
         setCallingPermission(data.from);
       }
     })
@@ -114,9 +114,9 @@ function App() {
 
     peer.current = new Peer({
       initiator: true,
-      trickle: false,
+      // trickle: false,
       stream: stream,
-      reconnectTimer: true,
+      // reconnectTimer: true,
     });
 
     console.log("Call user");
@@ -188,12 +188,13 @@ function App() {
 
     peer.current = new Peer({
       initiator: false,
-      trickle: false,
+      // trickle: false,
       stream: stream,
-      reconnectTimer: true,
+      // reconnectTimer: true,
     });
 
     peer.current.on("signal", data => {
+      console.log("call accept signal");
       socket.current.emit("acceptCall", { signal: data, to: remoteUserId });
     });
 
@@ -209,9 +210,6 @@ function App() {
 
     peer.current.on("error", (error) => {
       console.log(error);
-      if (error !== "Call ended") {
-        alert("Connection error or client closed webpage!")
-      }
       setCallAccepted(false);
       setCaller("");
       setRemoteUserId("");
@@ -220,6 +218,9 @@ function App() {
 
       socket.current.removeListener("videoStatusChange");
       socket.current.removeListener("audioStatusChange");
+      if (error !== "Call ended") {
+        alert("Connection error or client closed webpage!")
+      }
     });
 
 
@@ -244,7 +245,7 @@ function App() {
   }
 
   function giveCallPermission(id) {
-    socket.current.emit("giveCallPermission", {from: yourID, to: id});
+    socket.current.emit("giveCallPermission", { from: yourID, to: id });
   }
 
   function toggleVideo() {
@@ -425,19 +426,19 @@ function App() {
         }
         return (
           <>
-          <Button variant="primary" onClick={() => callPeer(key)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[key]}</Button>
-          <Button variant="success" onClick={() => giveCallPermission(key)} disabled={callButtonDisability} style={{ margin: 5 }} >give Permission to {users[key]}</Button>          
+            <Button variant="primary" onClick={() => callPeer(key)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[key]}</Button>
+            <Button variant="success" onClick={() => giveCallPermission(key)} disabled={callButtonDisability} style={{ margin: 5 }} >give Permission to {users[key]}</Button>
           </>
         );
       })
-    }else if(callingPermission){
-        callFaculty = (
-          <Button variant="primary" onClick={() => callPeer(callingPermission)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[callingPermission]}</Button>
-        )
+    } else if (callingPermission) {
+      callFaculty = (
+        <Button variant="primary" onClick={() => callPeer(callingPermission)} disabled={callButtonDisability} style={{ margin: 5 }} >Call {users[callingPermission]}</Button>
+      )
     }
   }
 
-  
+
   let PartnerVideo;
   let endCallButton;
 
