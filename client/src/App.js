@@ -76,10 +76,10 @@ function App() {
       setUsers(users);
     })
 
-    socket.current.on("receiveSignal", (data) => {
-      console.log("Reciving signal");
-      setCallerSignal(data.signal);
-    })
+    // socket.current.on("receiveSignal", (data) => {
+    //   console.log("Reciving signal");
+    //   setCallerSignal(data.signal);
+    // })
 
     socket.current.on("receiveCall", (data) => {
       console.log("Reciving");
@@ -87,7 +87,7 @@ function App() {
       setCallButtonDisability(true);
       setCaller(data.from.name);
       setRemoteUserId(data.from.id);
-      // setCallerSignal(data.signal);
+      setCallerSignal(data.signal);
     })
 
     socket.current.on("changeNameStatus", (response) => {
@@ -122,9 +122,9 @@ function App() {
 
     console.log("Call user");
     peer.current.on("signal", data => {
-      socket.current.emit("callerSignal", { userToCall: id, signalData: data, from: yourID });
+      socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID });
     });
-    socket.current.emit("callUser", { userToCall: id, from: yourID });
+    // socket.current.emit("callUser", { userToCall: id, from: yourID });
 
     peer.current.on("stream", stream => {
       if (partnerVideo.current) {
@@ -196,7 +196,7 @@ function App() {
     });
 
     peer.current.on("signal", data => {
-      console.log("call accept signal");
+      toast.info("call accept signal");
       socket.current.emit("acceptCall", { signal: data, to: remoteUserId });
     });
 
