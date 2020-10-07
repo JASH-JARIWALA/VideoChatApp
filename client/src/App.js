@@ -113,9 +113,6 @@ function App() {
 
   function handleNewICECandidateMsg(incoming) {
     const candidate = new RTCIceCandidate(incoming);
-
-    console.log("## ----- " + peer.current);
-
     peer.current.addIceCandidate(candidate)
       .catch(e => console.log(e));
   }
@@ -124,7 +121,9 @@ function App() {
 
     setCallButtonDisability(true);
 
-    peer.current = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.stunprotocol.org" }, { urls: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' },] });
+    peer.current = new RTCPeerConnection({ 
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] 
+    });
 
     console.log(peer.current);
 
@@ -218,7 +217,9 @@ function App() {
     setCallButtonDisability(true);
     // setCaller(false);
 
-    peer.current = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.stunprotocol.org" }, { urls: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' },] });
+    peer.current = new RTCPeerConnection({ 
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] 
+    });
 
     socket.current.on("ice-candidate", handleNewICECandidateMsg);
 
