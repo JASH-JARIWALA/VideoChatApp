@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 import io from "socket.io-client";
-import Peer from "simple-peer";
+// import Peer from "simple-peer";
 import styled from "styled-components";
 import { Button, Col, Form, Container, Card } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
@@ -10,6 +10,7 @@ import Loader from 'react-loader-spinner'
 
 const incommingCallAudio = new Audio('./skype_remix_2.mp3')
 incommingCallAudio.loop = true
+
 
 const LoadingTailSpin = () => {
   return (
@@ -76,10 +77,10 @@ function App() {
       setUsers(users);
     })
 
-    // socket.current.on("receiveSignal", (data) => {
-    //   console.log("Reciving signal");
-    //   setCallerSignal(data.signal);
-    // })
+    socket.current.on("receiveSignal", (data) => {
+      console.log("Reciving signal");
+      setCallerSignal(data.signal);
+    })
 
     socket.current.on("receiveCall", (data) => {
       console.log("Reciving");
@@ -87,7 +88,7 @@ function App() {
       setCallButtonDisability(true);
       setCaller(data.from.name);
       setRemoteUserId(data.from.id);
-      setCallerSignal(data.signal);
+      // setCallerSignal(data.signal);
     })
 
     socket.current.on("changeNameStatus", (response) => {
@@ -97,6 +98,8 @@ function App() {
         toast.error("name already taken!")
       }
     });
+
+
   }, []);
 
   useEffect(() => {
@@ -108,73 +111,101 @@ function App() {
     })
   }, [users])
 
+  function handleNewICECandidateMsg(incoming) {
+    const candidate = new RTCIceCandidate(incoming);
+
+    console.log("## ----- " + peer.current);
+
+    peer.current.addIceCandidate(candidate)
+      .catch(e => console.log(e));
+  }
+
   function callPeer(id) {
 
     setCallButtonDisability(true);
 
-    peer.current = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: stream,
-      // reconnectTimer: true,
-    //  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
-    });
+    peer.current = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.stunprotocol.org" }, { urls: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' },] });
 
-    console.log("Call user");
-    peer.current.on("signal", data => {
-      socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID });
-    });
-    // socket.current.emit("callUser", { userToCall: id, from: yourID });
+    console.log(peer.current);
 
-    peer.current.on("stream", stream => {
-      if (partnerVideo.current) {
-        partnerVideo.current.srcObject = stream;
+    socket.current.on("ice-candidate", handleNewICECandidateMsg);
+
+    peer.current.onicecandidate = function handleICECandidateEvent(e) {
+      if (e.candidate) {
+        socket.current.emit("ice-candidate", { to: id, candidate: e.candidate, });
       }
-    });
+    };
 
-    peer.current.on('connect', () => {
-      toast.info("Connected")
-    })
+    peer.current.ontrack = (e) => {
+      partnerVideo.current.srcObject = e.streams[0];
+    };
+    peer.current.onnegotiationneeded = () => {
+      peer.current.createOffer().then(offer => {
+        return peer.current.setLocalDescription(offer);
+      }).then(() => {
+        socket.current.emit("callerSignal", { userToCall: id, signalData: peer.current.localDescription, from: yourID });
+      }).catch(e => console.log(e));
+    }
+    socket.current.emit("callUser", { userToCall: id, from: yourID });
+
+    stream.getTracks().forEach(track => peer.current.addTrack(track, stream));
+
+    // console.log("Call user");
+    // peer.current.on("signal", data => {
+    //   socket.current.emit("callUser", { userToCall: id, signalData: data, from: yourID });
+    // });
+    // // socket.current.emit("callUser", { userToCall: id, from: yourID });
+
+    // peer.current.on("stream", stream => {
+    //   if (partnerVideo.current) {
+    //     partnerVideo.current.srcObject = stream;
+    //   }
+    // });
+
+    // peer.current.on('connect', () => {
+    //   toast.info("Connected")
+    // })
 
     socket.current.on("callAccepted", signal => {
       setCallAccepted(true);
       setRemoteUserId(id);
-      peer.current.signal(signal);
+      const desc = new RTCSessionDescription(signal);
+      peer.current.setRemoteDescription(desc).catch(e => console.log(e));
       setCallButtonDisability(true);
       console.log("accepted");
       setCallingPermission(false);
     });
 
 
-    peer.current.on("error", (error) => {
-      console.log(error);
-      if (error !== "Call ended") {
-        alert("Connection error or client closed webpage!")
-      }
-      setRemoteUserId("");
-      setCallAccepted(false);
-      setCallButtonDisability(false);
+    // peer.current.on("error", (error) => {
+    //   console.log(error);
+    //   if (error !== "Call ended") {
+    //     alert("Connection error or client closed webpage!")
+    //   }
+    //   setRemoteUserId("");
+    //   setCallAccepted(false);
+    //   setCallButtonDisability(false);
 
-      socket.current.removeListener("callAccepted");
-      socket.current.removeListener("videoStatusChange");
-      socket.current.removeListener("audioStatusChange");
-    })
+    //   socket.current.removeListener("callAccepted");
+    //   socket.current.removeListener("videoStatusChange");
+    //   socket.current.removeListener("audioStatusChange");
+    // })
 
 
-    socket.current.on("callEnded", () => {
-      // peer.current.destroy("Call ended");
-      setRemoteUserId("");
-      setCallAccepted(false);
-      setCallButtonDisability(false);
+    // socket.current.on("callEnded", () => {
+    //   // peer.current.destroy("Call ended");
+    //   setRemoteUserId("");
+    //   setCallAccepted(false);
+    //   setCallButtonDisability(false);
 
-      socket.current.removeListener("callAccepted");
-      socket.current.removeListener("videoStatusChange");
-      socket.current.removeListener("audioStatusChange");
-    })
+    //   socket.current.removeListener("callAccepted");
+    //   socket.current.removeListener("videoStatusChange");
+    //   socket.current.removeListener("audioStatusChange");
+    // })
 
-    socket.current.on("error", (error) => {
-      peer.current.destroy(error.message);
-    })
+    // socket.current.on("error", (error) => {
+    //   peer.current.destroy(error.message);
+    // })
 
   }
 
@@ -187,56 +218,93 @@ function App() {
     setCallButtonDisability(true);
     // setCaller(false);
 
-    peer.current = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-      // reconnectTimer: true,
-    //  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
-    });
+    peer.current = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.stunprotocol.org" }, { urls: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' },] });
 
-    peer.current.on("signal", data => {
-      toast.info("call accept signal");
-      socket.current.emit("acceptCall", { signal: data, to: remoteUserId });
-    });
+    socket.current.on("ice-candidate", handleNewICECandidateMsg);
 
-    peer.current.on("stream", stream => {
-      partnerVideo.current.srcObject = stream;
-    });
-
-    peer.current.signal(callerSignal);
-
-    peer.current.on('connect', () => {
-      toast.info("Connected")
-    })
-
-    peer.current.on("error", (error) => {
-      console.log(error);
-      setCallAccepted(false);
-      setCaller("");
-      setRemoteUserId("");
-      setCallerSignal();
-      setCallButtonDisability(false);
-
-      socket.current.removeListener("videoStatusChange");
-      socket.current.removeListener("audioStatusChange");
-      if (error !== "Call ended") {
-        alert("Connection error or client closed webpage!")
+    peer.current.onicecandidate = (e) => {
+      if (e.candidate) {
+        socket.current.emit("ice-candidate", { to: remoteUserId, candidate: e.candidate, });
       }
-    });
+    };
 
+    peer.current.ontrack = (e) => {
+      partnerVideo.current.srcObject = e.streams[0];
+    };
+    peer.current.onnegotiationneeded = () => {
+      peer.current.createOffer().then(offer => {
+        return peer.current.setLocalDescription(offer);
+      }).then(() => {
+        // socket.current.emit("callUser", { userToCall: id, signalData: peer.current.localDescription, from: yourID });
+      }).catch(e => console.log(e));
+    }
 
-    socket.current.on("callEnded", () => {
-      // peer.current.destroy("Call ended");
-      setCallAccepted(false);
-      setCaller("");
-      setRemoteUserId("");
-      setCallerSignal();
-      setCallButtonDisability(false);
-
-      socket.current.removeListener("videoStatusChange");
-      socket.current.removeListener("audioStatusChange");
+    const desc = new RTCSessionDescription(callerSignal);
+    peer.current.setRemoteDescription(desc).then(() => {
+      stream.getTracks().forEach(track => peer.current.addTrack(track, stream));
+    }).then(() => {
+      return peer.current.createAnswer();
+    }).then(answer => {
+      return peer.current.setLocalDescription(answer);
+    }).then(() => {
+      // const payload = {
+      //   target: incoming.caller,
+      //   caller: socketRef.current.id,
+      //   sdp: peer.current.localDescription
+      // }
+      socket.current.emit("acceptCall", { signal: peer.current.localDescription, to: remoteUserId });
     })
+
+    // peer.current = new Peer({
+    //   initiator: false,
+    //   trickle: false,
+    //   stream: stream,
+    //   // reconnectTimer: true,
+    //   //  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' },{url:'stun:stun1.l.google.com:19302'}, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
+    // });
+
+    // peer.current.on("signal", data => {
+    //   toast.info("call accept signal");
+    //   socket.current.emit("acceptCall", { signal: data, to: remoteUserId });
+    // });
+
+    // peer.current.on("stream", stream => {
+    //   partnerVideo.current.srcObject = stream;
+    // });
+
+    // peer.current.signal(callerSignal);
+
+    // peer.current.on('connect', () => {
+    //   toast.info("Connected")
+    // })
+
+    // peer.current.on("error", (error) => {
+    //   console.log(error);
+    //   setCallAccepted(false);
+    //   setCaller("");
+    //   setRemoteUserId("");
+    //   setCallerSignal();
+    //   setCallButtonDisability(false);
+
+    //   socket.current.removeListener("videoStatusChange");
+    //   socket.current.removeListener("audioStatusChange");
+    //   if (error !== "Call ended") {
+    //     alert("Connection error or client closed webpage!")
+    //   }
+    // });
+
+
+    // socket.current.on("callEnded", () => {
+    //   // peer.current.destroy("Call ended");
+    //   setCallAccepted(false);
+    //   setCaller("");
+    //   setRemoteUserId("");
+    //   setCallerSignal();
+    //   setCallButtonDisability(false);
+
+    //   socket.current.removeListener("videoStatusChange");
+    //   socket.current.removeListener("audioStatusChange");
+    // })
 
 
   }
@@ -446,11 +514,11 @@ function App() {
 
   if (callAccepted) {
     PartnerVideo = <video className="partnerVideo" playsInline ref={partnerVideo} autoPlay />
-    endCallButton = (
-      <div className="endCallButton">
-        <Button variant="danger" onClick={() => endCall()} >End Call</Button>
-      </div>
-    );
+    // endCallButton = (
+    //   <div className="endCallButton">
+    //     <Button variant="danger" onClick={() => endCall()} >End Call</Button>
+    //   </div>
+    // );
 
   }
 
@@ -462,16 +530,16 @@ function App() {
   const audioIcon = audioStatus ? <Mic size={20} /> : <MicMute size={20} />;
   const screenShareIcon = <ArrowBarUp size={20} />
   const mediaButtonDisable = !callAccepted;
-  ToggleMediaButtons = (
-    <Row className="justify-content-md-center">
-      <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }} disabled={mediaButtonDisable}> {videoIcon} </Button>
-      <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }} disabled={mediaButtonDisable}> {audioIcon} </Button>
-      <Button variant={screenSharebutton} onClick={toggleScreenShare} style={{ margin: 5 }} disabled={mediaButtonDisable}> {screenShareIcon} </Button>
-      {/* {videoStatus &&
-        <Button onClick={toggleCamera} style={{ margin: 5 }} disabled={mediaButtonDisable}> <ArrowRepeat /> </Button>
-      } */}
-    </Row>
-  )
+  // ToggleMediaButtons = (
+  //   <Row className="justify-content-md-center">
+  //     <Button variant={videobutton} onClick={toggleVideo} style={{ margin: 5 }} disabled={mediaButtonDisable}> {videoIcon} </Button>
+  //     <Button variant={audiobutton} onClick={toggleAudio} style={{ margin: 5 }} disabled={mediaButtonDisable}> {audioIcon} </Button>
+  //     <Button variant={screenSharebutton} onClick={toggleScreenShare} style={{ margin: 5 }} disabled={mediaButtonDisable}> {screenShareIcon} </Button>
+  //     {/* {videoStatus &&
+  //       <Button onClick={toggleCamera} style={{ margin: 5 }} disabled={mediaButtonDisable}> <ArrowRepeat /> </Button>
+  //     } */}
+  //   </Row>
+  // )
 
 
   let professorOnline;

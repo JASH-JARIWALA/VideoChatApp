@@ -53,6 +53,10 @@ io.on('connection', socket => {
             io.to(data.to).emit('callAccepted', data.signal);
         });
 
+        socket.on("ice-candidate", incoming => {
+            io.to(incoming.to).emit("ice-candidate", incoming.candidate);
+        });
+
         socket.on("endCall", (data) => {
             console.log(users[socket.id] + " ended call with " + users[data.id]);
             io.to(data.id).emit("callEnded");
