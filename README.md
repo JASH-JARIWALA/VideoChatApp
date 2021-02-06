@@ -12,3 +12,7 @@ Features
  - change display name
  
  - control microphone, camera and screen sharing
+ <row>
+ <img src="https://github.com/JASH-JARIWALA/VideoChatApp/raw/master/s1.jpg" height="500">
+ <img src="https://github.com/JASH-JARIWALA/VideoChatApp/raw/master/s2.jpg" height="500">
+</row>
