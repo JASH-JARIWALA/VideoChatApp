@@ -4849,7 +4849,6 @@
         (m.WEBRTC_SUPPORT = !!u()),
           (m.config = {
             iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
               { urls: "stun:stun.12connect.com:3478" },
               { urls: "stun:stun.12voip.com:3478" },
               { urls: "stun:stun.1und1.de:3478" },
